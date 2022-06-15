@@ -8,16 +8,17 @@ const int HYUNDAI_HDA2_DRIVER_TORQUE_FACTOR = 2;
 const uint32_t HYUNDAI_HDA2_STANDSTILL_THRSLD = 30;  // ~1kph
 
 const CanMsg HYUNDAI_HDA2_TX_MSGS[] = {
-  {0x50, 0, 16},
-  {0x1CF, 1, 8},
+  {0x12A, 0, 16},
+  {0x1AA, 0, 16},
 };
 
 AddrCheckStruct hyundai_hda2_addr_checks[] = {
-  {.msg = {{0x35, 1, 32, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0x65, 1, 32, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0xa0, 1, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0xea, 1, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0x175, 1, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0x15a, 0, 8, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0x100, 0, 32, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0xa0, 0, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0xea, 0, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0x175, 0, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+
 };
 #define HYUNDAI_HDA2_ADDR_CHECK_LEN (sizeof(hyundai_hda2_addr_checks) / sizeof(hyundai_hda2_addr_checks[0]))
 
@@ -71,7 +72,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
 
-  if (valid && (bus == 1)) {
+  if (valid && (bus == 0)) {
 
     if (addr == 0xea) {
       int torque_driver_new = ((GET_BYTE(to_push, 11) & 0x1fU) << 8U) | GET_BYTE(to_push, 10);
@@ -109,7 +110,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
     }
   }
 
-  generic_rx_checks((addr == 0x50) && (bus == 0));
+  generic_rx_checks((addr == 0x12A) && (bus == 0));
 
   return valid;
 }
@@ -122,7 +123,7 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   int bus = GET_BUS(to_send);
 
   // steering
-  if ((addr == 0x50) && (bus == 0)) {
+  if ((addr == 0x12A) && (bus == 0)) {
     int desired_torque = ((GET_BYTE(to_send, 6) & 0xFU) << 7U) | (GET_BYTE(to_send, 5) >> 1U);
     desired_torque -= 1024;
     uint32_t ts = microsecond_timer_get();
@@ -169,7 +170,7 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   }
 
   // cruise buttons check
-  if ((addr == 0x1cf) && (bus == 1)) {
+  if ((addr == 0x1AA) && (bus == 0)) {
     bool is_cancel = GET_BYTE(to_send, 2) == 4U;
     bool is_resume = GET_BYTE(to_send, 2) == 1U;
     bool allowed = (is_cancel && cruise_engaged_prev) || (is_resume && controls_allowed);
@@ -189,7 +190,7 @@ static int hyundai_hda2_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   if (bus_num == 0) {
     bus_fwd = 2;
   }
-  if ((bus_num == 2) && (addr != 0x50)) {
+  if ((bus_num == 2) && (addr != 0x12A)) {
     bus_fwd = 0;
   }
 
