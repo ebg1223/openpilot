@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import time
 import unittest
+from collections import defaultdict
 from datetime import datetime
 from unittest import mock
 from unittest.mock import Mock, patch
 
 from common.params import Params
-from laika.ephemeris import EphemerisType
+from laika.ephemeris import EphemerisType, GLONASSEphemeris, GPSEphemeris, PolyEphemeris
 from laika.gps_time import GPSTime
 from laika.helpers import ConstellationId, TimeRangeHolder
 from laika.raw_gnss import GNSSMeasurement, read_raw_ublox
@@ -45,11 +46,21 @@ class TestLaikad(unittest.TestCase):
   def test_create_msg_without_errors(self):
     gpstime = GPSTime.from_datetime(datetime.now())
     meas = GNSSMeasurement(ConstellationId.GPS, 1, gpstime.week, gpstime.tow, {'C1C': 0., 'D1C': 0.}, {'C1C': 0., 'D1C': 0.})
-    # Fake observables_final to be correct
+    # Fake measurement being processed
     meas.observables_final = meas.observables
-    msg = create_measurement_msg(meas)
+    data_mock = defaultdict(str)
+    data_mock['sv_id'] = 1
+    for ephem in [GLONASSEphemeris(data_mock, gpstime), GPSEphemeris(data_mock, gpstime)]:
+      meas.sat_ephemeris = ephem
+      msg = create_measurement_msg(meas)
+      self.assertEqual(msg.ephemerisType, EphemerisType.NAV)
 
-    self.assertEqual(msg.constellationId, 'gps')
+    for ephem_type in EphemerisType.all_orbits():
+      file_source = 'file_source.something'
+      meas.sat_ephemeris = PolyEphemeris('G01', data_mock, gpstime, ephem_type, 'file_source.something')
+      msg = create_measurement_msg(meas)
+      self.assertEqual(msg.ephemerisType, ephem_type)
+      self.assertEqual(msg.fileSource, file_source)
 
   def test_laika_online(self):
     laikad = Laikad(auto_update=True, valid_ephem_types=EphemerisType.ULTRA_RAPID_ORBIT)

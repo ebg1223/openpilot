@@ -2,6 +2,7 @@
 import json
 import time
 from concurrent.futures import Future, ProcessPoolExecutor
+from enum import IntEnum
 from typing import List, Optional
 
 import numpy as np
@@ -66,8 +67,12 @@ class Laikad:
         self.fetch_orbits(latest_msg_t + SECS_IN_MIN, block)
       new_meas = read_raw_ublox(report)
       processed_measurements = process_measurements(new_meas, self.astro_dog)
-      pos_fix = calc_pos_fix(processed_measurements, min_measurements=4)
-
+      pos_fix_and_residual = calc_pos_fix(processed_measurements, min_measurements=4)
+      if len(pos_fix_and_residual) > 0:
+        pos_fix = pos_fix_and_residual[0].tolist()
+        pos_fix_residual = pos_fix_and_residual[1].tolist()
+      else:
+        pos_fix, pos_fix_residual = [], []
       t = ublox_mono_time * 1e-9
       kf_pos_std = None
       if all(self.kf_valid(t)):
@@ -76,10 +81,13 @@ class Laikad:
       # If localizer is valid use its position to correct measurements
       if kf_pos_std is not None and linalg.norm(kf_pos_std) < 100:
         est_pos = self.gnss_kf.x[GStates.ECEF_POS]
-      elif len(pos_fix) > 0 and abs(np.array(pos_fix[1])).mean() < 1000:
-        est_pos = pos_fix[0][:3]
+        correctedWithPosition = CorrectedWithPosition.filter
+      elif len(pos_fix) > 0 and abs(np.array(pos_fix_residual)).mean() < 1000:
+        est_pos = pos_fix[:3]
+        correctedWithPosition = CorrectedWithPosition.posfix
       else:
         est_pos = None
+        correctedWithPosition = CorrectedWithPosition.none
       corrected_measurements = []
       if est_pos is not None:
         corrected_measurements = correct_measurements(processed_measurements, est_pos, self.astro_dog)
@@ -98,6 +106,8 @@ class Laikad:
       measurement_msg = log.LiveLocationKalman.Measurement.new_message
       dat.gnssMeasurements = {
         "positionECEF": measurement_msg(value=ecef_pos, std=pos_std, valid=kf_valid),
+        "positionFixECEF": measurement_msg(value=pos_fix, std=pos_fix_residual, valid=len(pos_fix) > 0),
+        "correctedWithPosition": correctedWithPosition.value,
         "velocityECEF": measurement_msg(value=ecef_vel, std=vel_std, valid=kf_valid),
         "ubloxMonoTime": ublox_mono_time,
         "correctedMeasurements": meas_msgs
@@ -126,7 +136,7 @@ class Laikad:
       if len(pos_fix) == 0:
         cloudlog.info("Position fix not available when resetting kalman filter")
         return
-      post_est = pos_fix[0][:3].tolist()
+      post_est = pos_fix[:3]
       self.init_gnss_localizer(post_est)
     if len(measurements) > 0:
       kf_add_observations(self.gnss_kf, t, measurements)
@@ -189,6 +199,10 @@ def create_measurement_msg(meas: GNSSMeasurement):
   c.pseudorangeRateStd = float(meas.observables_std['D1C'])
   c.satPos = meas.sat_pos_final.tolist()
   c.satVel = meas.sat_vel.tolist()
+  c.satVel = meas.sat_vel.tolist()
+  assert meas.sat_ephemeris is not None
+  c.ephemerisType = meas.sat_ephemeris.eph_type.value
+  c.fileSource = meas.sat_ephemeris.file_source
   return c
 
 
@@ -225,6 +239,12 @@ def deserialize_hook(dct):
   if 'week' in dct:
     return GPSTime(dct['week'], dct['tow'])
   return dct
+
+
+class CorrectedWithPosition(IntEnum):
+  posfix = 0
+  filter = 1
+  none = 2
 
 
 def main():
