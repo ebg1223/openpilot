@@ -170,9 +170,9 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   }
 
   // cruise buttons check
-  if ((addr == 0x1AA) && (bus == 0)) {
-    bool is_cancel = GET_BYTE(to_send, 2) == 4U;
-    bool is_resume = GET_BYTE(to_send, 2) == 1U;
+  if ((addr == 0x1AA) && (bus == 1)) {
+    bool is_cancel = GET_BYTE(to_send, 2) == 40U;
+    bool is_resume = GET_BYTE(to_send, 2) == 10U;
     bool allowed = (is_cancel && cruise_engaged_prev) || (is_resume && controls_allowed);
     if (!allowed) {
       tx = 0;
