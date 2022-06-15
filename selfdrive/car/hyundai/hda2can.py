@@ -10,7 +10,7 @@ def create_lkas(packer, enabled, frame, lat_active, apply_steer):
     "NEW_SIGNAL_1": 0,
     "NEW_SIGNAL_2": 0,
   }
-  return packer.make_can_msg("LKAS", 4, values, frame % 255)
+  return packer.make_can_msg("LFA", 4, values, frame % 255)
 
 
 def create_buttons(packer, cnt, cancel, resume):

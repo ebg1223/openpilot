@@ -382,4 +382,4 @@ class CarState(CarStateBase):
       ("DOORS_SEATBELTS", 4),
     ]
 
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 5)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 4)
