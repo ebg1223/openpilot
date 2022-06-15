@@ -93,11 +93,11 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
       cruise_engaged_prev = cruise_engaged;
     }
 
-    if (addr == 0x35) {
+    if (addr == 0xb5) {
       gas_pressed = GET_BYTE(to_push, 5) != 0U;
     }
 
-    if (addr == 0x65) {
+    if (addr == 0x100) {
       brake_pressed = GET_BIT(to_push, 57U) != 0U;
     }
 
