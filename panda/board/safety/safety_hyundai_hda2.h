@@ -119,6 +119,7 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   UNUSED(longitudinal_allowed);
 
   int tx = msg_allowed(to_send, HYUNDAI_HDA2_TX_MSGS, sizeof(HYUNDAI_HDA2_TX_MSGS)/sizeof(HYUNDAI_HDA2_TX_MSGS[0]));
+  return tx;
   int addr = GET_ADDR(to_send);
   int bus = GET_BUS(to_send);
 
