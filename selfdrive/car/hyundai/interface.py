@@ -40,7 +40,7 @@ class CarInterface(CarInterfaceBase):
     # added to selfdrive/car/tests/routes.py, we can remove it from this list.
     ret.dashcamOnly = candidate in {CAR.KIA_OPTIMA_H, CAR.ELANTRA_GT_I30}
     if candidate in HDA2_CAR:
-      ret.dashcamOnly = not os.path.exists('/data/enable-ev6')
+      ret.dashcamOnly = False#not os.path.exists('/data/enable-ev6')
 
     ret.steerActuatorDelay = 0.1  # Default delay
     ret.steerRateCost = 0.5
