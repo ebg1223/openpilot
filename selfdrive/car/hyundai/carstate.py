@@ -360,8 +360,8 @@ class CarState(CarStateBase):
       ("STEERING_OUT_TORQUE", "MDPS"),
 
       ("CRUISE_ACTIVE", "SCC1"),
-      ("SET_SPEED", "CRUISE_INFO"),
-      ("CRUISE_STANDSTILL", "CRUISE_INFO"),
+    #  ("SET_SPEED", "CRUISE_INFO"),
+    #  ("CRUISE_STANDSTILL", "CRUISE_INFO"),
       ("_COUNTER", "CRUISE_BUTTONS"),
 
       ("DISTANCE_UNIT", "CLUSTER_INFO"),
@@ -380,7 +380,7 @@ class CarState(CarStateBase):
       ("STEERING_SENSORS", 100),
       ("MDPS", 100),
       ("SCC1", 50),
-      ("CRUISE_INFO", 50),
+    #  ("CRUISE_INFO", 50),
       ("CRUISE_BUTTONS", 50),
       ("CLUSTER_INFO", 4),
       ("BLINKERS", 4),
