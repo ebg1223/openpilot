@@ -16,7 +16,6 @@
 #include "safety/safety_volkswagen_pq.h"
 #include "safety/safety_elm327.h"
 #include "safety/safety_body.h"
-#include <stdio.h>
 
 #ifdef STM32H7
 #define CANFD
