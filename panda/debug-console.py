@@ -33,7 +33,7 @@ if __name__ == "__main__":
       while True:
         for i, panda in enumerate(pandas):
           while True:
-            print(panda.get_type())
+            print(panda.has_canfd())
             ret = panda.serial_read(port_number)
             if len(ret) > 0:
               sys.stdout.write(setcolor[i] + ret.decode('ascii') + unsetcolor)
