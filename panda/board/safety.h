@@ -60,7 +60,6 @@ const safety_hooks *current_hooks = &nooutput_hooks;
 const addr_checks *current_rx_checks = &default_rx_checks;
 
 int safety_rx_hook(CANPacket_t *to_push) {
-  puts("GETRXHOOK");
   return current_hooks->rx(to_push);
 }
 
@@ -182,6 +181,7 @@ void update_counter(AddrCheckStruct addr_list[], int index, uint8_t counter) {
 }
 
 bool is_msg_valid(AddrCheckStruct addr_list[], int index) {
+  puts("ISMESGVALID");
   bool valid = true;
   if (index != -1) {
     if ((!addr_list[index].valid_checksum) || (addr_list[index].wrong_counters >= MAX_WRONG_COUNTERS)) {
