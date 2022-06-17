@@ -24,10 +24,6 @@
 
 #include "usb_comms.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
-
 // ********************* Serial debugging *********************
 
 bool check_started(void) {
