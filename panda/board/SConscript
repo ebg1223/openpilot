@@ -65,7 +65,7 @@ if not os.path.exists("/EON"):
     ],
   }
 
-if os.getenv("RELEASE"):
+if False:#os.getenv("RELEASE"):
   BUILD_TYPE = "RELEASE"
   cert_fn = os.getenv("CERT")
   assert cert_fn is not None, 'No certificate file specified. Please set CERT env variable'
@@ -75,7 +75,7 @@ else:
   cert_fn = File("../certs/debug").srcnode().abspath
   common_flags += ["-DALLOW_DEBUG"]
 
-if os.getenv("DEBUG"):
+if True:#os.getenv("DEBUG"):
   common_flags += ["-DDEBUG"]
 
 includes = [
