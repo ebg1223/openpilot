@@ -1,5 +1,5 @@
 // IRQs: OTG_FS
-
+#include "uart.h"
 typedef union {
   uint16_t w;
   struct BW {
