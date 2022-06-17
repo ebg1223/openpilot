@@ -206,6 +206,9 @@ static int hyundai_hda2_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   if(bus_fwd == -1){
     puts("BUS_FWD-1");
   }
+  else{
+    puts("NOTBUS_FWD-1");
+  }
   return bus_fwd;
 }
 
