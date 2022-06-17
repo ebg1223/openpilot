@@ -65,7 +65,7 @@ static uint32_t hyundai_hda2_compute_checksum(CANPacket_t *to_push) {
 }
 
 static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
-  puts("HOOK HOOK")
+  puts("HOOK HOOK");
 
   bool valid = addr_safety_check(to_push, &hyundai_hda2_rx_checks,
                                  hyundai_hda2_get_checksum, hyundai_hda2_compute_checksum, hyundai_hda2_get_counter);
