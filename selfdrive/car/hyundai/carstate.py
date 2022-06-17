@@ -140,6 +140,7 @@ class CarState(CarStateBase):
     ret.seatbeltUnlatched = cp.vl["DOORS_SEATBELTS"]["DRIVER_SEATBELT_LATCHED"] == 0
 
     gear = cp.vl["ACCELERATOR"]["GEAR"]
+    
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(gear))
 
     # TODO: figure out positions
@@ -153,6 +154,8 @@ class CarState(CarStateBase):
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     ret.standstill = ret.vEgoRaw < 0.1
 
+    #print(ret.vEgo, ret.gearShifter, gear, cp.vl["WHEEL_SPEEDS"]["WHEEL_SPEED_1"])
+
     ret.steeringRateDeg = cp.vl["STEERING_SENSORS"]["STEERING_RATE"]
     ret.steeringAngleDeg = cp.vl["STEERING_SENSORS"]["STEERING_ANGLE"] * -1
     ret.steeringTorque = cp.vl["MDPS"]["STEERING_COL_TORQUE"]
@@ -162,12 +165,14 @@ class CarState(CarStateBase):
     ret.leftBlinker, ret.rightBlinker = self.update_blinker_from_lamp(50, cp.vl["BLINKERS"]["LEFT_LAMP"],
                                                                       cp.vl["BLINKERS"]["RIGHT_LAMP"])
 
+    #print(ret.steeringRateDeg, ret.steeringAngleDeg)
+
     ret.cruiseState.available = True
     ret.cruiseState.enabled = cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
-   # ret.cruiseState.standstill = cp.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
+    ret.cruiseState.standstill = cp.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
 
     speed_factor = CV.MPH_TO_MS if cp.vl["CLUSTER_INFO"]["DISTANCE_UNIT"] == 1 else CV.KPH_TO_MS
-   # ret.cruiseState.speed = cp.vl["CRUISE_INFO"]["SET_SPEED"] * speed_factor
+    ret.cruiseState.speed = cp.vl["CRUISE_INFO"]["SET_SPEED"] * speed_factor
 
     self.buttons_counter = cp.vl["CRUISE_BUTTONS"]["_COUNTER"]
 
@@ -355,8 +360,8 @@ class CarState(CarStateBase):
       ("STEERING_OUT_TORQUE", "MDPS"),
 
       ("CRUISE_ACTIVE", "SCC1"),
-      #("SET_SPEED", "CRUISE_INFO"),
-      #("CRUISE_STANDSTILL", "CRUISE_INFO"),
+      ("SET_SPEED", "CRUISE_INFO"),
+      ("CRUISE_STANDSTILL", "CRUISE_INFO"),
       ("_COUNTER", "CRUISE_BUTTONS"),
 
       ("DISTANCE_UNIT", "CLUSTER_INFO"),
@@ -375,7 +380,7 @@ class CarState(CarStateBase):
       ("STEERING_SENSORS", 100),
       ("MDPS", 100),
       ("SCC1", 50),
-    #  ("CRUISE_INFO", 50),
+      ("CRUISE_INFO", 50),
       ("CRUISE_BUTTONS", 50),
       ("CLUSTER_INFO", 4),
       ("BLINKERS", 4),
