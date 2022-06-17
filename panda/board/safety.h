@@ -181,7 +181,6 @@ void update_counter(AddrCheckStruct addr_list[], int index, uint8_t counter) {
 }
 
 bool is_msg_valid(AddrCheckStruct addr_list[], int index) {
-  puts("ISMESGVALID");
   bool valid = true;
   if (index != -1) {
     if ((!addr_list[index].valid_checksum) || (addr_list[index].wrong_counters >= MAX_WRONG_COUNTERS)) {
@@ -204,7 +203,6 @@ bool addr_safety_check(CANPacket_t *to_push,
                        uint32_t (*get_checksum)(CANPacket_t *to_push),
                        uint32_t (*compute_checksum)(CANPacket_t *to_push),
                        uint8_t (*get_counter)(CANPacket_t *to_push)) {
-  puts("ADDR");
   int index = get_addr_check_index(to_push, rx_checks->check, rx_checks->len);
   update_addr_timestamp(rx_checks->check, index);
 
