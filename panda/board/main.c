@@ -24,6 +24,7 @@
 
 #include "usb_comms.h"
 
+#define DEBUG
 // ********************* Serial debugging *********************
 
 bool check_started(void) {
