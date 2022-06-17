@@ -1,6 +1,6 @@
 // ********************* Includes *********************
 #include "config.h"
-#include <stdio.h>
+
 #include "drivers/pwm.h"
 #include "drivers/usb.h"
 #include "drivers/gmlan_alt.h"
@@ -23,6 +23,9 @@
 #include "obj/gitversion.h"
 
 #include "usb_comms.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 
 // ********************* Serial debugging *********************
