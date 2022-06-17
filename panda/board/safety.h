@@ -120,7 +120,31 @@ bool msg_allowed(CANPacket_t *to_send, const CanMsg msg_list[], int len) {
       allowed = true;
       break;
     }
+    else{
+      if(addr != msg_list[i].addr){
+        puts("ADDR:");
+        puth(addr);
+        puts("\nMSGADDR:");
+        puth(msg_list[i].addr);
+        puts("\n");
+      }
+      if(bus != msg_list[i].bus){
+        puts("BUS:");
+        puth(bus);
+        puts("\nMSGBUS:");
+        puth(msg_list[i].bus);
+        puts("\n");
+      }
+      if(length != msg_list[i].len){
+        puts("LENGTH:");
+        puth(length);
+        puts("\nMSGLEN:");
+        puth(msg_list[i].len);
+        puts("\n");
+      }
+    }
   }
+  return true;
   return allowed;
 }
 
