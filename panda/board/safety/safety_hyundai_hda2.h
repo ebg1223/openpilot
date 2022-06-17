@@ -13,7 +13,7 @@ const CanMsg HYUNDAI_HDA2_TX_MSGS[] = {
 };
 
 AddrCheckStruct hyundai_hda2_addr_checks[] = {
-  {.msg = {{0xb5, 0, 8, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{0x15a, 0, 8, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{0x100, 0, 32, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{0xa0, 0, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{0xea, 0, 24, .check_checksum = true, .max_counter = 0xffU, .expected_timestep = 10000U}, { 0 }, { 0 }}},
@@ -97,11 +97,11 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
       cruise_engaged_prev = cruise_engaged;
     }
 
-    if (addr == 0xb5) {
+    if (addr == 0x35) {
       gas_pressed = GET_BYTE(to_push, 5) != 0U;
     }
 
-    if (addr == 0x100) {
+    if (addr == 0x65) {
       brake_pressed = GET_BIT(to_push, 57U) != 0U;
     }
 
@@ -123,14 +123,13 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   UNUSED(longitudinal_allowed);
 
   int tx = msg_allowed(to_send, HYUNDAI_HDA2_TX_MSGS, sizeof(HYUNDAI_HDA2_TX_MSGS)/sizeof(HYUNDAI_HDA2_TX_MSGS[0]));
+  int addr = GET_ADDR(to_send);
+  int bus = GET_BUS(to_send);
   if(tx==0){
     puts("TX_INVALID");
     puth(GET_ADDR(to_send));
     puts("\n");
   }
-  return tx;
-  int addr = GET_ADDR(to_send);
-  int bus = GET_BUS(to_send);
 
   // steering
   if ((addr == 0x12A) && (bus == 0)) {
@@ -181,8 +180,8 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
 
   // cruise buttons check
   if ((addr == 0x1AA) && (bus == 0)) {
-    bool is_cancel = GET_BYTE(to_send, 2) == 40U;
-    bool is_resume = GET_BYTE(to_send, 2) == 10U;
+    bool is_cancel = GET_BYTE(to_send, 2) == 4U;
+    bool is_resume = GET_BYTE(to_send, 2) == 1U;
     bool allowed = (is_cancel && cruise_engaged_prev) || (is_resume && controls_allowed);
     if (!allowed) {
       tx = 0;
