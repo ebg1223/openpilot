@@ -121,6 +121,7 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   int tx = msg_allowed(to_send, HYUNDAI_HDA2_TX_MSGS, sizeof(HYUNDAI_HDA2_TX_MSGS)/sizeof(HYUNDAI_HDA2_TX_MSGS[0]));
   if(tx==0){
     puts("INVALID TX");
+    puth(GET_ADDR(to_send));
   }
   return 1;
   return tx;
