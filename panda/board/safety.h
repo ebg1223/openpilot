@@ -60,7 +60,7 @@ const safety_hooks *current_hooks = &nooutput_hooks;
 const addr_checks *current_rx_checks = &default_rx_checks;
 
 int safety_rx_hook(CANPacket_t *to_push) {
-  puts("GETRXHOOK")
+  puts("GETRXHOOK");
   return current_hooks->rx(to_push);
 }
 
