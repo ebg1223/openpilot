@@ -203,16 +203,18 @@ static int hyundai_hda2_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   if ((bus_num == 2) && (addr != 0x12A)) {
     bus_fwd = 0;
   }
-  if(bus_fwd == -1){
-    puts("BUS_FWD-1\n");
-    puth(addr);
-    puts("\n");
+  if(false){//bus logging
+    if(bus_fwd == -1){
+      puts("BUS_FWD-1\n");
+      puth(addr);
+      puts("\n");
 
-  }
-  else{
-    puts("NOTBUS_FWD-1");
-    puth(addr);
-    puts("\n");
+    }
+    else{
+      puts("NOTBUS_FWD-1");
+      puth(addr);
+      puts("\n");
+    }
   }
   return bus_fwd;
 }
