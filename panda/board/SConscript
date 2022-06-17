@@ -75,7 +75,7 @@ else:
   cert_fn = File("../certs/debug").srcnode().abspath
   common_flags += ["-DALLOW_DEBUG"]
 
-if os.getenv("DEBUG"):
+if True:#os.getenv("DEBUG"):
   common_flags += ["-DDEBUG"]
 
 includes = [
