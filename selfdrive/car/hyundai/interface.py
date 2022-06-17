@@ -246,8 +246,8 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 2055 + STD_CARGO_KG
       ret.wheelbase = 2.9
       ret.steerRatio = 16.
-      ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.allOutput)]#,
-                           #get_safety_config(car.CarParams.SafetyModel.hyundaiHDA2)]
+      ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.allOutput),
+                           get_safety_config(car.CarParams.SafetyModel.allOutput)]#hyundaiHDA2
       tire_stiffness_factor = 0.65
 
       ret.maxLateralAccel = 2.
