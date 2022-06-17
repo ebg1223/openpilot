@@ -31,7 +31,7 @@ if __name__ == "__main__":
           panda.set_uart_baud(port_number, int(os.getenv("BAUD")))  # type: ignore
 
       while True:
-        for i, panda in enumerate(pandas):
+        for i, panda in enumerate(panda for panda in pandas if panda.has_canfd()):
           while True:
             ret = panda.serial_read(port_number)
             if len(ret) > 0:
