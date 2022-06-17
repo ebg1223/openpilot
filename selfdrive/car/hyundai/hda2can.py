@@ -19,4 +19,4 @@ def create_buttons(packer, cnt, cancel, resume):
     "DISTANCE_BTN": 1 if resume else 0,
     "PAUSE_RESUME_BTN": 1 if cancel else 0,
   }
-  return packer.make_can_msg("CRUISE_BUTTONS", 5, values)
+  return packer.make_can_msg("CRUISE_BUTTONS", 6, values)
