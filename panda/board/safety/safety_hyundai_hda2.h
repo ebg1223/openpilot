@@ -65,6 +65,7 @@ static uint32_t hyundai_hda2_compute_checksum(CANPacket_t *to_push) {
 }
 
 static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
+  puts("HOOK HOOK")
 
   bool valid = addr_safety_check(to_push, &hyundai_hda2_rx_checks,
                                  hyundai_hda2_get_checksum, hyundai_hda2_compute_checksum, hyundai_hda2_get_counter);
@@ -112,7 +113,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
 
   generic_rx_checks((addr == 0x12A) && (bus == 0));
 
-  return valid; //test
+  return valid;
 }
 
 static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
