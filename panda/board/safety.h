@@ -210,6 +210,15 @@ bool is_msg_valid(AddrCheckStruct addr_list[], int index) {
     if ((!addr_list[index].valid_checksum) || (addr_list[index].wrong_counters >= MAX_WRONG_COUNTERS)) {
       valid = false;
       controls_allowed = 0;
+      puts("INVALID\n");
+      if(!addr_list[index].valid_checksum){
+        puts("INVALID CHECKSUM");
+        puth(addr_list[index].msg->addr);
+      }
+      if((addr_list[index].wrong_counters >= MAX_WRONG_COUNTERS)){
+        puts("INVALID COUNTER");
+        puth(addr_list[index].msg->addr);
+      }
     }
   }
   return valid;
