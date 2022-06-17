@@ -1,11 +1,11 @@
 #ifndef PANDA_CONFIG_H
 #define PANDA_CONFIG_H
 
-#define DEBUG
-#define DEBUG_UART
-#define DEBUG_USB
-#define DEBUG_SPI
-#define DEBUG_FAULTS
+//#define DEBUG
+//#define DEBUG_UART
+//#define DEBUG_USB
+//#define DEBUG_SPI
+//#define DEBUG_FAULTS
 
 #define DEEPSLEEP_WAKEUP_DELAY 3U
 
