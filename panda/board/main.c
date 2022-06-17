@@ -325,7 +325,7 @@ int main(void) {
 
   // print hello
   puts("\n\n\n************************ MAIN START ************************\n");
-
+  printf("HELLLLLLLOOOOOO")
   // check for non-supported board types
   if(hw_type == HW_TYPE_UNKNOWN){
     puts("Unsupported board type\n");

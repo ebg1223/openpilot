@@ -60,12 +60,12 @@ const safety_hooks *current_hooks = &nooutput_hooks;
 const addr_checks *current_rx_checks = &default_rx_checks;
 
 int safety_rx_hook(CANPacket_t *to_push) {
-  puts("SAFETY_RX_HOOK");
+  printf("SAFETY_RX_HOOK");
   return current_hooks->rx(to_push);
 }
 
 int safety_tx_hook(CANPacket_t *to_send) {
-  puts("SAFETY_TX_HOOK");
+  printf("SAFETY_TX_HOOK");
   return (relay_malfunction ? -1 : current_hooks->tx(to_send, get_longitudinal_allowed()));
 }
 
@@ -112,7 +112,7 @@ void gen_crc_lookup_table_16(uint16_t poly, uint16_t crc_lut[]) {
 }
 
 bool msg_allowed(CANPacket_t *to_send, const CanMsg msg_list[], int len) {
-  puts("MSG_ALLOWED");
+  printf("MSG_ALLOWED");
   int addr = GET_ADDR(to_send);
   int bus = GET_BUS(to_send);
   int length = GET_LEN(to_send);
