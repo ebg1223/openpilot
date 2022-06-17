@@ -9,7 +9,7 @@ const uint32_t HYUNDAI_HDA2_STANDSTILL_THRSLD = 30;  // ~1kph
 
 const CanMsg HYUNDAI_HDA2_TX_MSGS[] = {
   {0x12A, 0, 16},
-  {0x1AA, 0, 16},
+  {0x1AA, 1, 8},
 };
 
 AddrCheckStruct hyundai_hda2_addr_checks[] = {
