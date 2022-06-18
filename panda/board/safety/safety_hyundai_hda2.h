@@ -9,7 +9,7 @@ const uint32_t HYUNDAI_HDA2_STANDSTILL_THRSLD = 30;  // ~1kph
 
 const CanMsg HYUNDAI_HDA2_TX_MSGS[] = {
   {0x12A, 0, 16},
-  {0x1AA, 0, 16},
+  {0x1AA, 2, 16},
 };
 
 AddrCheckStruct hyundai_hda2_addr_checks[] = {
@@ -180,9 +180,9 @@ static int hyundai_hda2_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed)
   }
 
   // cruise buttons check
-  if ((addr == 0x1AA) && (bus == 0)) {
-    bool is_cancel = GET_BYTE(to_send, 2) == 40U;
-    bool is_resume = GET_BYTE(to_send, 2) == 10U;
+  if ((addr == 0x1AA) && (bus == 2)) {
+    bool is_cancel = GET_BYTE(to_send, 2) == 4U;
+    bool is_resume = GET_BYTE(to_send, 2) == 1U;
     bool allowed = (is_cancel && cruise_engaged_prev) || (is_resume && controls_allowed);
     if (!allowed) {
       tx = 0;
@@ -203,14 +203,15 @@ static int hyundai_hda2_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   if ((bus_num == 2) && (addr != 0x12A)) {
     bus_fwd = 0;
   }
-  if(false){//bus logging
+  if(true){//bus logging
     if(bus_fwd == -1){
       puts("BUS_FWD-1\n");
       puth(addr);
       puts("\n");
 
     }
-    else{
+    else if (false)
+    {
       puts("NOTBUS_FWD-1");
       puth(addr);
       puts("\n");
