@@ -174,6 +174,7 @@ void safety_tick(const addr_checks *rx_checks) {
       rx_checks->check[i].lagging = lagging;
       if (lagging) {
         controls_allowed = 0;
+        puts("LAGGING");
       }
     }
   }
@@ -260,6 +261,7 @@ void generic_rx_checks(bool stock_ecu_detected) {
 
   // check if stock ECU is on bus broken by car harness
   if ((safety_mode_cnt > RELAY_TRNS_TIMEOUT) && stock_ecu_detected) {
+    puts("MALFUNCTION");
     relay_malfunction_set();
   }
 }
@@ -427,6 +429,10 @@ bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
                                            MIN(driver_min_limit, 0)));
 
   // check for violation
+  bool fighting =  (val < lowest_allowed) || (val > highest_allowed);
+  if(fighting){
+    puts("FIGHTING");
+  }
   return (val < lowest_allowed) || (val > highest_allowed);
 }
 
@@ -439,6 +445,11 @@ bool rt_rate_limit_check(int val, int val_last, const int MAX_RT_DELTA) {
   int lowest_val = MIN(val_last, 0) - MAX_RT_DELTA;
 
   // check for violation
+  bool ratelim = (val < lowest_val) || (val > highest_val);
+  if(ratelim)
+  {
+    puts("RATE LIM");
+  }
   return (val < lowest_val) || (val > highest_val);
 }
 
