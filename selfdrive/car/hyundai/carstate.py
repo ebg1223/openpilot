@@ -169,10 +169,10 @@ class CarState(CarStateBase):
 
     ret.cruiseState.available = True
     ret.cruiseState.enabled = cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
-  #  ret.cruiseState.standstill = cp.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
+    ret.cruiseState.standstill = cp.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
 
     speed_factor = CV.MPH_TO_MS if cp.vl["CLUSTER_INFO"]["DISTANCE_UNIT"] == 1 else CV.KPH_TO_MS
-  #  ret.cruiseState.speed = cp.vl["CRUISE_INFO"]["SET_SPEED"] * speed_factor
+    ret.cruiseState.speed = cp.vl["CRUISE_INFO"]["SET_SPEED"] * speed_factor
 
     self.buttons_counter = cp.vl["CRUISE_BUTTONS"]["_COUNTER"]
 
@@ -360,8 +360,8 @@ class CarState(CarStateBase):
       ("STEERING_OUT_TORQUE", "MDPS"),
 
       ("CRUISE_ACTIVE", "SCC1"),
-    #  ("SET_SPEED", "CRUISE_INFO"),
-    #  ("CRUISE_STANDSTILL", "CRUISE_INFO"),
+      ("SET_SPEED", "CRUISE_INFO"),
+      ("CRUISE_STANDSTILL", "CRUISE_INFO"),
       ("_COUNTER", "CRUISE_BUTTONS"),
 
       ("DISTANCE_UNIT", "CLUSTER_INFO"),
@@ -380,7 +380,7 @@ class CarState(CarStateBase):
       ("STEERING_SENSORS", 100),
       ("MDPS", 100),
       ("SCC1", 50),
-    #  ("CRUISE_INFO", 50),
+      ("CRUISE_INFO", 50),
       ("CRUISE_BUTTONS", 50),
       ("CLUSTER_INFO", 4),
       ("BLINKERS", 4),
