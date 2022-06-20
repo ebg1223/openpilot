@@ -316,7 +316,7 @@ class CarState(CarStateBase):
   @staticmethod
   def get_cam_can_parser(CP):
     if CP.carFingerprint in HDA2_CAR:
-      return None
+      return CarState.get_can_parser_hda2_cruise_info(CP)
 
     signals = [
       # signal_name, signal_address
@@ -388,3 +388,16 @@ class CarState(CarStateBase):
     ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 4)
+
+  @staticmethod
+  def get_can_parser_hda2_cruise_info(CP):
+    signals = [
+      ("SET_SPEED", "CRUISE_INFO"),
+      ("CRUISE_STANDSTILL", "CRUISE_INFO"),
+    ]
+
+    checks = [
+      ("CRUISE_INFO", 50),
+    ]
+
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 6)
