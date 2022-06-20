@@ -380,7 +380,7 @@ class CarState(CarStateBase):
       ("STEERING_SENSORS", 100),
       ("MDPS", 100),
       ("SCC1", 50),
-      ("CRUISE_INFO", 200),
+      ("CRUISE_INFO", 4),
       ("CRUISE_BUTTONS", 50),
       ("CLUSTER_INFO", 4),
       ("BLINKERS", 4),
