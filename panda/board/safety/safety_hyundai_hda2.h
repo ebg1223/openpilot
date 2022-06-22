@@ -77,6 +77,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
     puth(GET_ADDR(to_push));
     puts("\n");
   }
+  return true;
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
 
