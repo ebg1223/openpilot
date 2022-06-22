@@ -102,7 +102,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
     }
 
     if (addr == 0x100) {
-      brake_pressed = false;//GET_BIT(to_push, 57U) != 0U;
+      brake_pressed = GET_BIT(to_push, 57U) != 0U;
     }
 
     if (addr == 0xa0) {
