@@ -79,8 +79,9 @@ class CarController:
 
         # cruise standstill resume
         elif CC.enabled and CS.out.cruiseState.standstill:
-          can_sends.append(hda2can.create_buttons(self.packer, CS.buttons_counter+1, False, True))
-          self.last_button_frame = self.frame
+          pass
+          #can_sends.append(hda2can.create_buttons(self.packer, CS.buttons_counter+1, False, True))
+          #self.last_button_frame = self.frame
 
     else:
 
