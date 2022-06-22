@@ -169,12 +169,14 @@ class CarState(CarStateBase):
 
     ret.cruiseState.available = True
     ret.cruiseState.enabled = cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
-    ret.cruiseState.standstill = cp.vl_all["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
+    ret.cruiseState.standstill = cp_cam.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
+    print(cp_cam.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"])
 
     speed_factor = CV.MPH_TO_MS if cp.vl["CLUSTER_INFO"]["DISTANCE_UNIT"] == 1 else CV.KPH_TO_MS
     
     try:
       ret.cruiseState.speed = float(cp_cam.vl["CRUISE_INFO"]["SET_SPEED"]) * speed_factor
+      print(cp_cam.vl["CRUISE_INFO"]["SET_SPEED"])
     except Exception as e:
       print(cp_cam.vl["CRUISE_INFO"]["SET_SPEED"])
 
