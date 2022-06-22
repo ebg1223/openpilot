@@ -1,6 +1,5 @@
 from collections import deque
 import copy
-from msilib.schema import Error
 
 from cereal import car
 from common.conversions import Conversions as CV
@@ -176,7 +175,7 @@ class CarState(CarStateBase):
     
     try:
       ret.cruiseState.speed = float(cp.vl_all["CRUISE_INFO"]["SET_SPEED"]) * speed_factor
-    except Error as e:
+    except Exception as e:
       print(cp.vl_all["CRUISE_INFO"]["SET_SPEED"])
 
 
