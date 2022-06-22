@@ -240,7 +240,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.5
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
-    elif candidate in (CAR.KIA_EV6, CAR.TUCSON_2022):
+    elif candidate in (CAR.KIA_EV6):
       ret.mass = 2055 + STD_CARGO_KG
       ret.wheelbase = 2.9
       ret.steerRatio = 16.
@@ -251,6 +251,19 @@ class CarInterface(CarInterfaceBase):
       ret.maxLateralAccel = 2.
       # TODO override until there is more data
       set_torque_tune(ret.lateralTuning, 2.0, 0.05)
+
+    elif candidate == CAR.TUCSON_2022:
+      ret.mass = 1814 + STD_CARGO_KG
+      ret.wheelbase = 3.0
+      ret.steerRatio = 14.2
+      ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.noOutput),
+                           get_safety_config(car.CarParams.SafetyModel.hyundaiHDA2)]
+      tire_stiffness_factor = 0.65
+      ret.maxLateralAccel = 2.
+      # TODO override until there is more data
+      set_torque_tune(ret.lateralTuning, 2.0, 0.05)
+
+    
 
     # Genesis
     elif candidate == CAR.GENESIS_G70:
