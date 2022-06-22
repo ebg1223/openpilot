@@ -17,7 +17,7 @@ def create_buttons(packer, cnt, cancel, resume):
   values = {
     "_COUNTER": cnt % 0xf,
     "SET_ME_1": 1,
-    #"DISTANCE_BTN": 1 if resume else 0,
-    #"PAUSE_RESUME_BTN": 1 if cancel else 0,
+    "DISTANCE_BTN": 1 if resume else 0,
+    "PAUSE_RESUME_BTN": 1 if cancel else 0,
   }
   return packer.make_can_msg("CRUISE_BUTTONS", 6, values)

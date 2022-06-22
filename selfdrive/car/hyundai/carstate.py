@@ -134,7 +134,7 @@ class CarState(CarStateBase):
 
     ret.gas = cp.vl["ACCELERATOR"]["ACCELERATOR_PEDAL"] / 255.
     ret.gasPressed = ret.gas > 1e-3
-    ret.brakePressed = False#cp.vl["BRAKE"]["BRAKE_PRESSED"] == 1
+    ret.brakePressed = cp.vl["BRAKE"]["BRAKE_PRESSED"] == 1
 
     ret.doorOpen = cp.vl["DOORS_SEATBELTS"]["DRIVER_DOOR_OPEN"] == 1
     ret.seatbeltUnlatched = cp.vl["DOORS_SEATBELTS"]["DRIVER_SEATBELT_LATCHED"] == 0
@@ -171,7 +171,7 @@ class CarState(CarStateBase):
     ret.cruiseState.speed = float(cp_cam.vl["CRUISE_INFO"]["SET_SPEED"]) * speed_factor
 
     ret.cruiseState.available = True
-    ret.cruiseState.enabled = ret.cruiseState.speed >0 #cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
+    ret.cruiseState.enabled = cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
     ret.cruiseState.standstill = cp_cam.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
 
 
