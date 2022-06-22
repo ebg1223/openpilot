@@ -1,5 +1,6 @@
 from collections import deque
 import copy
+from msilib.schema import Error
 
 from cereal import car
 from common.conversions import Conversions as CV
@@ -172,8 +173,12 @@ class CarState(CarStateBase):
     ret.cruiseState.standstill = cp.vl_all["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
 
     speed_factor = CV.MPH_TO_MS if cp.vl["CLUSTER_INFO"]["DISTANCE_UNIT"] == 1 else CV.KPH_TO_MS
-    print(cp.vl_all["CRUISE_INFO"]["SET_SPEED"])
-    ret.cruiseState.speed = float(str(cp.vl_all["CRUISE_INFO"]["SET_SPEED"])) * speed_factor
+    
+    try:
+      ret.cruiseState.speed = float(cp.vl_all["CRUISE_INFO"]["SET_SPEED"]) * speed_factor
+    except Error as e:
+      print(cp.vl_all["CRUISE_INFO"]["SET_SPEED"])
+
 
     self.buttons_counter = cp.vl["CRUISE_BUTTONS"]["_COUNTER"]
 
