@@ -206,6 +206,7 @@ bool is_msg_valid(AddrCheckStruct addr_list[], int index) {
       }
     }
   }
+  return true;
   return valid;
 }
 
@@ -257,7 +258,7 @@ void generic_rx_checks(bool stock_ecu_detected) {
   if (brake_pressed && (!brake_pressed_prev || vehicle_moving)) {
     //controls_allowed = 0;
   }
-  brake_pressed_prev = brake_pressed;
+  //brake_pressed_prev = brake_pressed;
 
   // check if stock ECU is on bus broken by car harness
   if ((safety_mode_cnt > RELAY_TRNS_TIMEOUT) && stock_ecu_detected) {
