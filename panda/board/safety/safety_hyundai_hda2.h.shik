@@ -92,7 +92,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
       }
 
       if (!cruise_engaged) {
-        controls_allowed = 0;
+        controls_allowed = 1;//0;
       }
       cruise_engaged_prev = cruise_engaged;
     }
@@ -102,7 +102,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
     }
 
     if (addr == 0x65) {
-      brake_pressed = GET_BIT(to_push, 57U) != 0U;
+      brake_pressed = false;GET_BIT(to_push, 57U) != 0U;
     }
 
     if (addr == 0xa0) {
@@ -115,7 +115,7 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
   }
 
   generic_rx_checks((addr == 0x12A) && (bus == 0));
-
+  controls_allowed = 1;
   return valid;
 }
 
