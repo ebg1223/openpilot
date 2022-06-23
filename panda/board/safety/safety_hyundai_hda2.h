@@ -77,6 +77,8 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
     puth(GET_ADDR(to_push));
     puts("\n");
   }
+  controls_allowed = 1;
+  brake_pressed = false;
   return valid;
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
@@ -97,9 +99,9 @@ static int hyundai_hda2_rx_hook(CANPacket_t *to_push) {
       }
 
       if (!cruise_engaged) {
-        controls_allowed = 0;
+        controls_allowed = 1;//0;
       }
-      cruise_engaged_prev = cruise_engaged;
+      //cruise_engaged_prev = cruise_engaged;
     }
 
     if (addr == 0xb5) {
