@@ -164,7 +164,8 @@ class CarState(CarStateBase):
     else:
       ret.gasPressed = bool(cp.vl["ACCELERATOR_BRAKE_ALT"]["ACCELERATOR_PEDAL_PRESSED"])
 
-    ret.brakePressed = cp.vl["TCS"]["DriverBraking"] == 1
+    brake_msg = "ACCELERATOR_BRAKE_ALT" if self.CP.carFingerprint not in (EV_CAR | HYBRID_CAR) else "BRAKE"
+    ret.brakePressed = cp.vl[brake_msg]["BRAKE_PRESSED"] == 1
 
     ret.doorOpen = cp.vl["DOORS_SEATBELTS"]["DRIVER_DOOR_OPEN"] == 1
     ret.seatbeltUnlatched = cp.vl["DOORS_SEATBELTS"]["DRIVER_SEATBELT_LATCHED"] == 0
@@ -197,14 +198,14 @@ class CarState(CarStateBase):
       ret.rightBlindspot = cp.vl["BLINDSPOTS_REAR_CORNERS"]["FR_INDICATOR"] != 0
 
     ret.cruiseState.available = True
+    ret.cruiseState.enabled = cp.vl["SCC1"]["CRUISE_ACTIVE"] == 1
     self.is_metric = cp.vl["CLUSTER_INFO"]["DISTANCE_UNIT"] != 1
     if not self.CP.openpilotLongitudinalControl:
       speed_factor = CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS
       cp_cruise_info = cp_cam if self.CP.flags & HyundaiFlags.CANFD_CAMERA_SCC else cp
-      ret.cruiseState.speed = cp_cruise_info.vl["SCC_CONTROL"]["VSetDis"] * speed_factor
-      ret.cruiseState.standstill = cp_cruise_info.vl["SCC_CONTROL"]["CRUISE_STANDSTILL"] == 1
-      ret.cruiseState.enabled = cp_cruise_info.vl["SCC_CONTROL"]["ACCMode"] in (1, 2)
-      self.cruise_info = copy.copy(cp_cruise_info.vl["SCC_CONTROL"])
+      ret.cruiseState.speed = cp_cruise_info.vl["CRUISE_INFO"]["SET_SPEED"] * speed_factor
+      ret.cruiseState.standstill = cp_cruise_info.vl["CRUISE_INFO"]["CRUISE_STANDSTILL"] == 1
+      self.cruise_info = copy.copy(cp_cruise_info.vl["CRUISE_INFO"])
 
     cruise_btn_msg = "CRUISE_BUTTONS_ALT" if self.CP.flags & HyundaiFlags.CANFD_ALT_BUTTONS else "CRUISE_BUTTONS"
     self.prev_cruise_buttons = self.cruise_buttons[-1]
@@ -417,6 +418,7 @@ class CarState(CarStateBase):
 
     cruise_btn_msg = "CRUISE_BUTTONS_ALT" if CP.flags & HyundaiFlags.CANFD_ALT_BUTTONS else "CRUISE_BUTTONS"
     gear_msg = "GEAR_ALT" if CP.flags & HyundaiFlags.CANFD_ALT_GEARS else "GEAR_SHIFTER"
+    brake_msg = "ACCELERATOR_BRAKE_ALT" if CP.carFingerprint not in (EV_CAR | HYBRID_CAR) else "BRAKE"
     signals = [
       ("WHEEL_SPEED_1", "WHEEL_SPEEDS"),
       ("WHEEL_SPEED_2", "WHEEL_SPEEDS"),
@@ -424,6 +426,7 @@ class CarState(CarStateBase):
       ("WHEEL_SPEED_4", "WHEEL_SPEEDS"),
 
       ("GEAR", gear_msg),
+      ("BRAKE_PRESSED", brake_msg),
 
       ("STEERING_RATE", "STEERING_SENSORS"),
       ("STEERING_ANGLE", "STEERING_SENSORS"),
@@ -431,8 +434,7 @@ class CarState(CarStateBase):
       ("STEERING_OUT_TORQUE", "MDPS"),
       ("LKA_FAULT", "MDPS"),
 
-      ("DriverBraking", "TCS"),
-
+      ("CRUISE_ACTIVE", "SCC1"),
       ("COUNTER", cruise_btn_msg),
       ("CRUISE_BUTTONS", cruise_btn_msg),
       ("ADAPTIVE_CRUISE_MAIN_BTN", cruise_btn_msg),
@@ -449,9 +451,10 @@ class CarState(CarStateBase):
     checks = [
       ("WHEEL_SPEEDS", 100),
       (gear_msg, 100),
+      (brake_msg, 100),
       ("STEERING_SENSORS", 100),
       ("MDPS", 100),
-      ("TCS", 50),
+      ("SCC1", 50),
       (cruise_btn_msg, 50),
       ("CLUSTER_INFO", 4),
       ("BLINKERS", 4),
@@ -467,15 +470,24 @@ class CarState(CarStateBase):
         ("BLINDSPOTS_REAR_CORNERS", 20),
       ]
 
-    if not (CP.flags & HyundaiFlags.CANFD_CAMERA_SCC.value) and not CP.openpilotLongitudinalControl:
+    if not (CP.flags & HyundaiFlags.CANFD_CAMERA_SCC) and not CP.openpilotLongitudinalControl:
       signals += [
-        ("ACCMode", "SCC_CONTROL"),
-        ("VSetDis", "SCC_CONTROL"),
-        ("CRUISE_STANDSTILL", "SCC_CONTROL"),
+        ("COUNTER", "CRUISE_INFO"),
+        ("NEW_SIGNAL_1", "CRUISE_INFO"),
+        ("CRUISE_MAIN", "CRUISE_INFO"),
+        ("CRUISE_STATUS", "CRUISE_INFO"),
+        ("CRUISE_INACTIVE", "CRUISE_INFO"),
+        ("ZEROS_9", "CRUISE_INFO"),
+        ("CRUISE_STANDSTILL", "CRUISE_INFO"),
+        ("ZEROS_5", "CRUISE_INFO"),
+        ("DISTANCE_SETTING", "CRUISE_INFO"),
+        ("SET_SPEED", "CRUISE_INFO"),
+        ("NEW_SIGNAL_4", "CRUISE_INFO"),
       ]
       checks += [
-        ("SCC_CONTROL", 50),
+        ("CRUISE_INFO", 50),
       ]
+
 
     if CP.carFingerprint in EV_CAR:
       signals += [
@@ -511,20 +523,21 @@ class CarState(CarStateBase):
       checks += [("CAM_0x2a4", 20)]
     elif CP.flags & HyundaiFlags.CANFD_CAMERA_SCC:
       signals += [
-        ("COUNTER", "SCC_CONTROL"),
-        ("NEW_SIGNAL_1", "SCC_CONTROL"),
-        ("MainMode_ACC", "SCC_CONTROL"),
-        ("ACCMode", "SCC_CONTROL"),
-        ("CRUISE_INACTIVE", "SCC_CONTROL"),
-        ("ZEROS_9", "SCC_CONTROL"),
-        ("CRUISE_STANDSTILL", "SCC_CONTROL"),
-        ("ZEROS_5", "SCC_CONTROL"),
-        ("DISTANCE_SETTING", "SCC_CONTROL"),
-        ("VSetDis", "SCC_CONTROL"),
+        ("COUNTER", "CRUISE_INFO"),
+        ("NEW_SIGNAL_1", "CRUISE_INFO"),
+        ("CRUISE_MAIN", "CRUISE_INFO"),
+        ("CRUISE_STATUS", "CRUISE_INFO"),
+        ("CRUISE_INACTIVE", "CRUISE_INFO"),
+        ("ZEROS_9", "CRUISE_INFO"),
+        ("CRUISE_STANDSTILL", "CRUISE_INFO"),
+        ("ZEROS_5", "CRUISE_INFO"),
+        ("DISTANCE_SETTING", "CRUISE_INFO"),
+        ("SET_SPEED", "CRUISE_INFO"),
+        ("NEW_SIGNAL_4", "CRUISE_INFO"),
       ]
 
       checks += [
-        ("SCC_CONTROL", 50),
+        ("CRUISE_INFO", 50),
       ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 6)
