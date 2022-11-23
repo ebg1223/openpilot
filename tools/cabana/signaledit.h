@@ -4,8 +4,9 @@
 #include <QDialog>
 #include <QLabel>
 #include <QLineEdit>
-#include <QPushButton>
 #include <QSpinBox>
+#include <QTimer>
+#include <QToolButton>
 
 #include "selfdrive/ui/qt/widgets/controls.h"
 
@@ -13,55 +14,54 @@
 #include "tools/cabana/dbcmanager.h"
 
 class SignalForm : public QWidget {
+  Q_OBJECT
 public:
-  SignalForm(const Signal &sig, QWidget *parent);
-  Signal getSignal();
-
-  QLineEdit *name, *unit, *comment, *val_desc;
-  QSpinBox *size, *offset;
-  QDoubleSpinBox *factor, *min_val, *max_val;
+  SignalForm(QWidget *parent);
+  QLineEdit *name, *unit, *comment, *val_desc, *offset, *factor, *min_val, *max_val;
+  QLabel *lsb, *msb;
+  QSpinBox *size;
   QComboBox *sign, *endianness;
-  int start_bit = 0;
+  bool changed_by_user = false;
+
+ signals:
+  void changed();
 };
 
 class SignalEdit : public QWidget {
   Q_OBJECT
 
 public:
-  SignalEdit(int index, const QString &msg_id, const Signal &sig, QWidget *parent = nullptr);
-  void setFormVisible(bool show);
+  SignalEdit(int index, QWidget *parent = nullptr);
+  void setSignal(const QString &msg_id, const Signal *sig);
+  void setChartOpened(bool opened);
   void signalHovered(const Signal *sig);
-  inline bool isFormVisible() const { return form_container->isVisible(); }
-  QString sig_name;
-  SignalForm *form;
-  int form_idx = 0;
+  void updateForm(bool show);
+  inline bool isFormVisible() const { return form->isVisible(); }
   const Signal *sig = nullptr;
+  QString msg_id;
 
 signals:
   void highlight(const Signal *sig);
-  void showChart();
+  void showChart(const QString &name, const Signal *sig, bool show, bool merge);
+  void remove(const Signal *sig);
+  void save(const Signal *sig, const Signal &new_sig);
   void showFormClicked();
-  void remove();
-  void save();
 
 protected:
   void enterEvent(QEvent *event) override;
   void leaveEvent(QEvent *event) override;
+  void saveSignal();
 
+  SignalForm *form = nullptr;
   ElidedLabel *title;
-  QWidget *form_container;
+  QLabel *color_label;
   QLabel *icon;
-};
-
-class AddSignalDialog : public QDialog {
-public:
-  AddSignalDialog(const QString &id, int start_bit, int size, QWidget *parent);
-  SignalForm *form;
+  int form_idx = 0;
+  QToolButton *plot_btn;
+  QTimer *save_timer;
 };
 
 class SignalFindDlg : public QDialog {
-  Q_OBJECT
-
 public:
   SignalFindDlg(const QString &id, const Signal *signal, QWidget *parent);
 };

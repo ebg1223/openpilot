@@ -1,6 +1,5 @@
 #include "tools/cabana/binaryview.h"
 
-#include <QApplication>
 #include <QFontDatabase>
 #include <QHeaderView>
 #include <QMouseEvent>
@@ -11,26 +10,27 @@
 
 // BinaryView
 
-const int CELL_HEIGHT = 30;
+const int CELL_HEIGHT = 26;
+
+inline int get_bit_index(const QModelIndex &index, bool little_endian) {
+  return index.row() * 8 + (little_endian ? 7 - index.column() : index.column());
+}
 
 BinaryView::BinaryView(QWidget *parent) : QTableView(parent) {
   model = new BinaryViewModel(this);
   setModel(model);
-  setItemDelegate(new BinaryItemDelegate(this));
+  delegate = new BinaryItemDelegate(this);
+  setItemDelegate(delegate);
   horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  verticalHeader()->setSectionsClickable(false);
   horizontalHeader()->hide();
-  verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+  setFrameShape(QFrame::NoFrame);
+  setShowGrid(false);
+  setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
   setMouseTracking(true);
-
-  // replace selection model
-  auto old_model = selectionModel();
-  setSelectionModel(new BinarySelectionModel(model));
-  delete old_model;
-
-  QObject::connect(model, &QAbstractItemModel::modelReset, [this]() {
-    setFixedHeight((CELL_HEIGHT + 1) * std::min(model->rowCount(), 8) + 2);
-  });
 }
 
 void BinaryView::highlight(const Signal *sig) {
@@ -41,24 +41,71 @@ void BinaryView::highlight(const Signal *sig) {
   }
 }
 
-void BinaryView::mouseMoveEvent(QMouseEvent *event) {
-  if (auto index = indexAt(event->pos()); index.isValid()) {
-    auto item = (BinaryViewModel::Item *)index.internalPointer();
-    highlight(item->sig);
-    if (item->sig)
-      QToolTip::showText(event->globalPos(), item->sig->name.c_str(), this, rect());
+void BinaryView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags flags) {
+  auto index = indexAt(viewport()->mapFromGlobal(QCursor::pos()));
+  if (!anchor_index.isValid() || !index.isValid())
+    return;
+
+  QItemSelection selection;
+  auto [start, size, is_lb] = getSelection(index);
+  for (int i = start; i < start + size; ++i) {
+    auto idx = model->bitIndex(i, is_lb);
+    selection.merge({idx, idx}, flags);
   }
+  selectionModel()->select(selection, flags);
+}
+
+void BinaryView::mousePressEvent(QMouseEvent *event) {
+  delegate->setSelectionColor(style()->standardPalette().color(QPalette::Active, QPalette::Highlight));
+  if (auto index = indexAt(event->pos()); index.isValid() && index.column() != 8) {
+    anchor_index = index;
+    auto item = (const BinaryViewModel::Item *)anchor_index.internalPointer();
+    int bit_idx = get_bit_index(anchor_index, true);
+    for (auto s : item->sigs) {
+      if (bit_idx == s->lsb || bit_idx == s->msb) {
+        anchor_index = model->bitIndex(bit_idx == s->lsb ? s->msb : s->lsb, true);
+        resize_sig = s;
+        delegate->setSelectionColor(item->bg_color);
+        break;
+      }
+    }
+  }
+  event->accept();
+}
+
+void BinaryView::highlightPosition(const QPoint &pos) {
+  if (auto index = indexAt(viewport()->mapFromGlobal(pos)); index.isValid()) {
+    auto item = (BinaryViewModel::Item *)index.internalPointer();
+    const Signal *sig = item->sigs.isEmpty() ? nullptr : item->sigs.back();
+    highlight(sig);
+    sig ? QToolTip::showText(pos, sig->name.c_str(), this, rect())
+        : QToolTip::hideText();
+  }
+}
+
+void BinaryView::mouseMoveEvent(QMouseEvent *event) {
+  highlightPosition(event->globalPos());
   QTableView::mouseMoveEvent(event);
 }
 
 void BinaryView::mouseReleaseEvent(QMouseEvent *event) {
   QTableView::mouseReleaseEvent(event);
 
-  if (auto indexes = selectedIndexes(); !indexes.isEmpty()) {
-    int start_bit = indexes.first().row() * 8 + indexes.first().column();
-    int size = indexes.back().row() * 8 + indexes.back().column() - start_bit + 1;
-    emit cellsSelected(start_bit, size);
+  auto release_index = indexAt(event->pos());
+  if (release_index.isValid() && anchor_index.isValid()) {
+    if (selectionModel()->hasSelection()) {
+      auto [start_bit, size, is_lb] = getSelection(release_index);
+      resize_sig ? emit resizeSignal(resize_sig, start_bit, size)
+                 : emit addSignal(start_bit, size, is_lb);
+    } else {
+      auto item = (const BinaryViewModel::Item *)anchor_index.internalPointer();
+      if (item && item->sigs.size() > 0)
+        emit signalClicked(item->sigs.back());
+    }
   }
+  clearSelection();
+  anchor_index = QModelIndex();
+  resize_sig = nullptr;
 }
 
 void BinaryView::leaveEvent(QEvent *event) {
@@ -67,65 +114,70 @@ void BinaryView::leaveEvent(QEvent *event) {
 }
 
 void BinaryView::setMessage(const QString &message_id) {
-  msg_id = message_id;
   model->setMessage(message_id);
-  resizeRowsToContents();
   clearSelection();
+  anchor_index = QModelIndex();
+  resize_sig = nullptr;
+  hovered_sig = nullptr;
+  highlightPosition(QCursor::pos());
   updateState();
 }
 
-void BinaryView::updateState() {
-  model->updateState();
+QSet<const Signal *> BinaryView::getOverlappingSignals() const {
+  QSet<const Signal *> overlapping;
+  for (auto &item : model->items) {
+    if (item.sigs.size() > 1)
+      for (auto s : item.sigs) overlapping += s;
+  }
+  return overlapping;
+}
+
+std::tuple<int, int, bool> BinaryView::getSelection(QModelIndex index) {
+  if (index.column() == 8) {
+    index = model->index(index.row(), 7);
+  }
+  bool is_lb = (resize_sig && resize_sig->is_little_endian) || (!resize_sig && index < anchor_index);
+  int cur_bit_idx = get_bit_index(index, is_lb);
+  int anchor_bit_idx = get_bit_index(anchor_index, is_lb);
+  auto [start_bit, end_bit] = std::minmax(cur_bit_idx, anchor_bit_idx);
+  return {start_bit, end_bit - start_bit + 1, is_lb};
 }
 
 // BinaryViewModel
 
 void BinaryViewModel::setMessage(const QString &message_id) {
-  msg_id = message_id;
-
   beginResetModel();
+  msg_id = message_id;
   items.clear();
-  row_count = 0;
-
-  dbc_msg = dbc()->msg(msg_id);
-  if (dbc_msg) {
+  if ((dbc_msg = dbc()->msg(msg_id))) {
     row_count = dbc_msg->size;
     items.resize(row_count * column_count);
-    for (int i = 0; i < dbc_msg->sigs.size(); ++i) {
-      const auto &sig = dbc_msg->sigs[i];
-      const int start = sig.is_little_endian ? sig.start_bit : bigEndianBitIndex(sig.start_bit);
-      const int end = start + sig.size - 1;
+    int i = 0;
+    for (auto sig : dbc_msg->getSignals()) {
+      auto [start, end] = getSignalRange(sig);
       for (int j = start; j <= end; ++j) {
-        int idx = column_count * (j / 8) + j % 8;
+        int bit_index = sig->is_little_endian ? bigEndianBitIndex(j) : j;
+        int idx = column_count * (bit_index / 8) + bit_index % 8;
         if (idx >= items.size()) {
-          qWarning() << "signal " << sig.name.c_str() << "out of bounds.start_bit:" << sig.start_bit << "size:" << sig.size;
+          qWarning() << "signal " << sig->name.c_str() << "out of bounds.start_bit:" << sig->start_bit << "size:" << sig->size;
           break;
         }
-        if (j == start) {
-          sig.is_little_endian ? items[idx].is_lsb = true : items[idx].is_msb = true;
-        } else if (j == end) {
-          sig.is_little_endian ? items[idx].is_msb = true : items[idx].is_lsb = true;
-        }
+        if (j == start) sig->is_little_endian ? items[idx].is_lsb = true : items[idx].is_msb = true;
+        if (j == end) sig->is_little_endian ? items[idx].is_msb = true : items[idx].is_lsb = true;
         items[idx].bg_color = getColor(i);
-        items[idx].sig = &dbc_msg->sigs[i];
+        items[idx].sigs.push_back(sig);
       }
+      ++i;
     }
+  } else {
+    row_count = can->lastMessage(msg_id).dat.size();
+    items.resize(row_count * column_count);
   }
-
   endResetModel();
-}
-
-QModelIndex BinaryViewModel::index(int row, int column, const QModelIndex &parent) const {
-  return createIndex(row, column, (void *)&items[row * column_count + column]);
-}
-
-Qt::ItemFlags BinaryViewModel::flags(const QModelIndex &index) const {
-  return (index.column() == column_count - 1) ? Qt::ItemIsEnabled : Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 void BinaryViewModel::updateState() {
   auto prev_items = items;
-
   const auto &binary = can->lastMessage(msg_id).dat;
   // data size may changed.
   if (!dbc_msg && binary.size() != row_count) {
@@ -135,11 +187,10 @@ void BinaryViewModel::updateState() {
     items.resize(row_count * column_count);
     endResetModel();
   }
-
   char hex[3] = {'\0'};
   for (int i = 0; i < std::min(binary.size(), row_count); ++i) {
     for (int j = 0; j < column_count - 1; ++j) {
-      items[i * column_count + j].val = QChar((binary[i] >> (7 - j)) & 1 ? '1' : '0');
+      items[i * column_count + j].val = ((binary[i] >> (7 - j)) & 1) != 0 ? '1' : '0';
     }
     hex[0] = toHex(binary[i] >> 4);
     hex[1] = toHex(binary[i] & 0xf);
@@ -157,27 +208,12 @@ void BinaryViewModel::updateState() {
 QVariant BinaryViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (orientation == Qt::Vertical) {
     switch (role) {
-      case Qt::DisplayRole: return section + 1;
+      case Qt::DisplayRole: return section;
       case Qt::SizeHintRole: return QSize(30, CELL_HEIGHT);
       case Qt::TextAlignmentRole: return Qt::AlignCenter;
     }
   }
   return {};
-}
-
-// BinarySelectionModel
-
-void BinarySelectionModel::select(const QItemSelection &selection, QItemSelectionModel::SelectionFlags command) {
-  QItemSelection new_selection = selection;
-  if (auto indexes = selection.indexes(); !indexes.isEmpty()) {
-    auto [begin_idx, end_idx] = (QModelIndex[]){indexes.first(), indexes.back()};
-    for (int row = begin_idx.row(); row <= end_idx.row(); ++row) {
-      int left_col = (row == begin_idx.row()) ? begin_idx.column() : 0;
-      int right_col = (row == end_idx.row()) ? end_idx.column() : 7;
-      new_selection.merge({model()->index(row, left_col), model()->index(row, right_col)}, command);
-    }
-  }
-  QItemSelectionModel::select(new_selection, command);
 }
 
 // BinaryItemDelegate
@@ -187,7 +223,7 @@ BinaryItemDelegate::BinaryItemDelegate(QObject *parent) : QStyledItemDelegate(pa
   small_font.setPointSize(6);
   hex_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
   hex_font.setBold(true);
-  highlight_color = QApplication::style()->standardPalette().color(QPalette::Active, QPalette::Highlight);
+  selection_color = QApplication::style()->standardPalette().color(QPalette::Active, QPalette::Highlight);
 }
 
 QSize BinaryItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
@@ -200,17 +236,18 @@ void BinaryItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
   BinaryView *bin_view = (BinaryView *)parent();
   painter->save();
 
-  // background
-  QColor bg_color = item->sig && bin_view->hoveredSignal() == item->sig ? hoverColor(item->bg_color) : item->bg_color;
-  if (option.state & QStyle::State_Selected) {
-    bg_color = highlight_color;
-  }
-  painter->fillRect(option.rect, bg_color);
-
-  // text
   if (index.column() == 8) {
     painter->setFont(hex_font);
+  } else if (option.state & QStyle::State_Selected) {
+    painter->fillRect(option.rect, selection_color);
+    painter->setPen(QApplication::style()->standardPalette().color(QPalette::BrightText));
+  } else if (!item->sigs.isEmpty() && (!bin_view->selectionModel()->hasSelection() || !item->sigs.contains(bin_view->resize_sig))) {
+    painter->fillRect(option.rect, item->bg_color);
+    painter->setPen(item->sigs.contains(bin_view->hovered_sig)
+                        ? QApplication::style()->standardPalette().color(QPalette::BrightText)
+                        : Qt::black);
   }
+
   painter->drawText(option.rect, Qt::AlignCenter, item->val);
   if (item->is_msb || item->is_lsb) {
     painter->setFont(small_font);

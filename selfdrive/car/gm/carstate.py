@@ -1,3 +1,4 @@
+import copy
 from cereal import car
 from common.conversions import Conversions as CV
 from common.numpy_fast import mean
@@ -26,6 +27,8 @@ class CarState(CarStateBase):
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
     self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
+    self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
+    self.moving_backward = pt_cp.vl["EBCMWheelSpdRear"]["MovingBackward"] != 0
 
     # Variables used for avoiding LKAS faults
     self.loopback_lka_steering_cmd_updated = len(loopback_cp.vl_all["ASCMLKASteeringCmd"]["RollingCounter"]) > 0
@@ -48,21 +51,19 @@ class CarState(CarStateBase):
     else:
       ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL2"]["PRNDL2"], None))
 
-    # Some Volt 2016-17 have loose brake pedal push rod retainers which causes the ECM to believe
-    # that the brake is being intermittently pressed without user interaction.
-    # To avoid a cruise fault we need to match the ECM's brake pressed signal and threshold
-    # https://static.nhtsa.gov/odi/tsbs/2017/MC-10137629-9999.pdf
     ret.brake = pt_cp.vl["ECMAcceleratorPos"]["BrakePedalPos"]
-    if self.CP.networkLocation != NetworkLocation.fwdCamera:
-      ret.brakePressed = ret.brake >= 8
+    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+      ret.brakePressed = pt_cp.vl["ECMEngineStatus"]["BrakePressed"] != 0
     else:
-      # While car is braking, cancel button causes ECM to enter a soft disable state with a fault status.
-      # Match ECM threshold at a standstill to allow the camera to cancel earlier
-      ret.brakePressed = ret.brake >= 20
+      # Some Volt 2016-17 have loose brake pedal push rod retainers which causes the ECM to believe
+      # that the brake is being intermittently pressed without user interaction.
+      # To avoid a cruise fault we need to use a conservative brake position threshold
+      # https://static.nhtsa.gov/odi/tsbs/2017/MC-10137629-9999.pdf
+      ret.brakePressed = ret.brake >= 8
 
     # Regen braking is braking
     if self.CP.transmissionType == TransmissionType.direct:
-      ret.brakePressed = ret.brakePressed or pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"] != 0
+      ret.regenBraking = pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"] != 0
 
     ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
     ret.gasPressed = ret.gas > 1e-5
@@ -99,6 +100,9 @@ class CarState(CarStateBase):
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
       ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
+      # openpilot controls nonAdaptive when not pcmCruise
+      if self.CP.pcmCruise:
+        ret.cruiseState.nonAdaptive = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCCruiseState"] not in (2, 3)
 
     return ret
 
@@ -111,6 +115,7 @@ class CarState(CarStateBase):
         ("AEBCmdActive", "AEBCmd"),
         ("RollingCounter", "ASCMLKASteeringCmd"),
         ("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"),
+        ("ACCCruiseState", "ASCMActiveCruiseControlStatus"),
       ]
       checks += [
         ("AEBCmd", 10),
@@ -142,14 +147,21 @@ class CarState(CarStateBase):
       ("FRWheelSpd", "EBCMWheelSpdFront"),
       ("RLWheelSpd", "EBCMWheelSpdRear"),
       ("RRWheelSpd", "EBCMWheelSpdRear"),
+      ("MovingBackward", "EBCMWheelSpdRear"),
       ("PRNDL2", "ECMPRDNL2"),
       ("ManualMode", "ECMPRDNL2"),
       ("LKADriverAppldTrq", "PSCMStatus"),
       ("LKATorqueDelivered", "PSCMStatus"),
       ("LKATorqueDeliveredStatus", "PSCMStatus"),
+      ("HandsOffSWlDetectionStatus", "PSCMStatus"),
+      ("HandsOffSWDetectionMode", "PSCMStatus"),
+      ("LKATotalTorqueDelivered", "PSCMStatus"),
+      ("PSCMStatusChecksum", "PSCMStatus"),
+      ("RollingCounter", "PSCMStatus"),
       ("TractionControlOn", "ESPStatus"),
       ("ParkBrake", "VehicleIgnitionAlt"),
       ("CruiseMainOn", "ECMEngineStatus"),
+      ("BrakePressed", "ECMEngineStatus"),
     ]
 
     checks = [

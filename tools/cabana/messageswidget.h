@@ -1,21 +1,9 @@
 #pragma once
 
 #include <QAbstractTableModel>
-#include <QComboBox>
-#include <QDialog>
-#include <QJsonDocument>
 #include <QTableView>
-#include <QTextEdit>
 
 #include "tools/cabana/canmessages.h"
-
-class LoadDBCDialog : public QDialog {
-  Q_OBJECT
-
-public:
-  LoadDBCDialog(QWidget *parent);
-  QTextEdit *dbc_edit;
-};
 
 class MessageListModel : public QAbstractTableModel {
 Q_OBJECT
@@ -23,13 +11,19 @@ Q_OBJECT
 public:
   MessageListModel(QObject *parent) : QAbstractTableModel(parent) {}
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-  int columnCount(const QModelIndex &parent = QModelIndex()) const override { return 4; }
+  int columnCount(const QModelIndex &parent = QModelIndex()) const override { return 5; }
   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-  int rowCount(const QModelIndex &parent = QModelIndex()) const override { return row_count; }
-  void updateState();
+  int rowCount(const QModelIndex &parent = QModelIndex()) const override { return msgs.size(); }
+  void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+  void setFilterString(const QString &string);
+  void msgsReceived(const QHash<QString, CanData> *new_msgs = nullptr);
+  void sortMessages();
+  QStringList msgs;
 
 private:
-  int row_count = 0;
+  QString filter_str;
+  int sort_column = 0;
+  Qt::SortOrder sort_order = Qt::AscendingOrder;
 };
 
 class MessagesWidget : public QWidget {
@@ -37,18 +31,11 @@ class MessagesWidget : public QWidget {
 
 public:
   MessagesWidget(QWidget *parent);
-
-public slots:
-  void loadDBCFromName(const QString &name);
-  void loadDBCFromFingerprint();
-  void loadDBCFromPaste();
-
 signals:
   void msgSelectionChanged(const QString &message_id);
 
 protected:
   QTableView *table_widget;
-  QComboBox *dbc_combo;
+  QString current_msg_id;
   MessageListModel *model;
-  QJsonDocument fingerprint_to_dbc;
 };
