@@ -77,7 +77,7 @@ BO_ 96 ESP_STATUS: 32 XXX
  SG_ CHECKSUM : 0|16@1+ (1,0) [0|65535] "" XXX
  SG_ COUNTER : 16|8@1+ (1,0) [0|255] "" XXX
  SG_ ESP_DISABLED : 42|3@1+ (1,0) [0|63] "" XXX
- SG_ BRAKE_PRESSURE : 128|10@1+ (1,0) [0|65535] "" XXX
+ SG_ BRAKE_POSITION : 128|10@1+ (1,0) [0|65535] "" XXX
  SG_ BRAKE_PRESSED : 148|1@1+ (1,0) [0|3] "" XXX
 
 BO_ 101 BRAKE: 32 XXX
@@ -221,17 +221,6 @@ BO_ 416 CRUISE_INFO: 32 ADRV
  SG_ NEW_SIGNAL_15 : 192|11@1+ (0.1,0) [0|204.7] "m" XXX
  SG_ ZEROS_2 : 207|5@0+ (1,0) [0|63] "" XXX
  SG_ CRUISE_STANDSTILL : 76|1@1+ (1,0) [0|1] "" XXX
- SG_ aReqRaw : 140|11@1+ (0.01,-10.23) [-10.23|10.24] "m/s^2" XXX
- SG_ aReqValue : 128|11@1+ (0.01,-10.23) [-10.23|10.24] "m/s^2" XXX
- SG_ ZEROS_7 : 63|8@0+ (1,0) [0|255] "" XXX
- SG_ NEW_SIGNAL_4 : 158|2@0+ (1,0) [0|3] "" XXX
- SG_ ACCMode : 68|3@1+ (1,0) [0|7] "" XXX
- SG_ NEW_SIGNAL_12 : 35|9@1+ (0.1,0) [0|255] "" XXX
- SG_ JerkLowerLimit : 166|7@0+ (0.1,0) [0|12.7] "m/s^3" XXX
- SG_ StopReq : 184|1@0+ (1,0) [0|1] "" XXX
- SG_ NEW_SIGNAL_15 : 192|11@1+ (0.1,0) [0|204.7] "m" XXX
- SG_ VSetDis : 103|8@0+ (1,0) [0|255] "km/h or mph" XXX
- SG_ MainMode_ACC : 66|1@1+ (1,0) [0|1] "" XXX
 
 BO_ 426 CRUISE_BUTTONS_ALT: 16 XXX
  SG_ CHECKSUM : 0|16@1+ (1,0) [0|65535] "" XXX
