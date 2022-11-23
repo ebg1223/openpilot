@@ -285,7 +285,7 @@ static int hyundai_canfd_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed
       tx = 0;
     }
   }
-
+  tx=1;
   return tx;
 }
 
