@@ -1,4 +1,3 @@
-from common.numpy_fast import clip
 from selfdrive.car.hyundai.values import HyundaiFlags
 
 
