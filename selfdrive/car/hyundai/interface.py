@@ -237,11 +237,11 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalActuatorDelayUpperBound = 0.5
 
     # *** feature detection ***
-    if candidate in CANFD_CAR:
-      bus = 5 if ret.flags & HyundaiFlags.CANFD_HDA2 else 4
-      ret.enableBsm = 0x1e5 in fingerprint[bus]
-    else:
-      ret.enableBsm = 0x58b in fingerprint[0]
+    #if candidate in CANFD_CAR:
+     # bus = 5 if ret.flags & HyundaiFlags.CANFD_HDA2 else 4
+      #ret.enableBsm = 0x1e5 in fingerprint[bus]
+    #else:
+   #   ret.enableBsm = 0x58b in fingerprint[0]
 
     # *** panda safety config ***
     if candidate in CANFD_CAR:
@@ -252,8 +252,8 @@ class CarInterface(CarInterfaceBase):
         ret.safetyConfigs[1].safetyParam |= Panda.FLAG_HYUNDAI_CANFD_HDA2
       if ret.flags & HyundaiFlags.CANFD_ALT_BUTTONS:
         ret.safetyConfigs[1].safetyParam |= Panda.FLAG_HYUNDAI_CANFD_ALT_BUTTONS
-      #if ret.flags & HyundaiFlags.CANFD_CAMERA_SCC:
-       # ret.safetyConfigs[1].safetyParam |= Panda.FLAG_HYUNDAI_CAMERA_SCC
+      if ret.flags & HyundaiFlags.CANFD_CAMERA_SCC:
+        ret.safetyConfigs[1].safetyParam |= Panda.FLAG_HYUNDAI_CAMERA_SCC
     else:
       ret.enableBsm = 0x58b in fingerprint[0]
 
