@@ -1,7 +1,7 @@
 [submodule "panda"]
 	path = panda
 	url = https://github.com/ebg1223/panda
-	branch = sportage-base
+	branch = sportage-base-mads
 [submodule "opendbc"]
   path = opendbc
   url = ../../commaai/opendbc.git
@@ -11,7 +11,7 @@
 [submodule "cereal"]
 	path = cereal
 	url = https://github.com/ebg1223/cereal
-	branch = sportage-base
+	branch = sportage-base-mads
 [submodule "rednose_repo"]
   path = rednose_repo
   url = ../../commaai/rednose.git
