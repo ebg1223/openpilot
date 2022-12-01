@@ -9,8 +9,9 @@
   path = laika_repo
   url = ../../commaai/laika.git
 [submodule "cereal"]
-  path = cereal
-  url = ../../commaai/cereal.git
+	path = cereal
+	url = https://github.com/ebg1223/cereal
+	branch = sportage-base
 [submodule "rednose_repo"]
   path = rednose_repo
   url = ../../commaai/rednose.git
